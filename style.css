@@ -1,0 +1,20 @@
+#gameBoard {
+    width: 300px; /* Adjust width as needed */
+  height: 300px; /* Adjust height as needed */
+  margin: 0 auto; /* Center the board horizontally */
+  border: 1px solid #ccc; /* Add a border around the board */
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Divide into 3 equal columns */
+  grid-template-rows: repeat(3, 1fr); /* Divide into 3 equal rows */
+  }
+  
+  .cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-size: 2rem;
+    border: 1px solid grey;
+    background: lightyellow;
+    cursor: pointer;
+  }
