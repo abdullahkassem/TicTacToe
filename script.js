@@ -1,18 +1,4 @@
 
-// gameBoard.displayGrid();
-// gameBoard.editGrid(0,0,'X');
-// gameBoard.editGrid(0,1,'X');
-// gameBoard.editGrid(0,2,'o');
-// gameBoard.editGrid(1,0,'o');
-// gameBoard.editGrid(1,1,'o');
-// gameBoard.editGrid(1,2,'X');
-// gameBoard.editGrid(2,0,'X');
-// gameBoard.editGrid(2,1,'X');
-// gameBoard.editGrid(2,2,'o');
-
-// gameBoard.displayGrid();
-// console.log(gameBoard.checkWinner());
-
 
 function Player(Name,marker)
 {
@@ -85,10 +71,12 @@ function Game()
             if(row>2 || col >2)
             {
                 console.error("move out of bounds");
-                return;
+                return -1;
             }
             if(grid[row][col] == "-")
                 grid[row][col] = marker;
+            else
+            {   return -1;}
 
         }
 
@@ -100,7 +88,7 @@ function Game()
                 const player = grid[ax][ay];
 
                 if (player !== '-' && player === grid[bx][by] && player === grid[cx][cy]) {
-                    console.log(`${player} has won`);
+                    // console.log(`${player} has won`);
                     return player;
                 }
             }
@@ -109,14 +97,14 @@ function Game()
                 for(let j = 0;j<3;j++)
                 {
                     if (grid[i][j] === '-') {
-                        console.log("Game is not over yet");
+                        // console.log("Game is not over yet");
                         return null;  // Game is not over yet
                     }
                 }   
             }
             
             // If no winner and no empty cells, it's a tie
-            console.log("Tie");
+            // console.log("Tie");
             return 'Tie';
         }
 
@@ -124,7 +112,7 @@ function Game()
 
 
 
-        return {getGrid,checkWinner,clearGrid,displayGrid,editGrid};
+        return {getGrid,checkWinner,clearGrid,editGrid};
     })();
 
     const player1 = Player("Human","x");
@@ -163,16 +151,26 @@ function Game()
 
     function playStep(row,col)
     {
+        let editReturnValue = 0;
         if(!turn){
-            console.log(`${player1.getName()} turn:`);
-            gameBoard.editGrid(row,col,player1.getMarker());
+            editReturnValue = gameBoard.editGrid(row,col,player1.getMarker());
         }
         else{
-            console.log(`${player2.getName()} turn:`);
-            gameBoard.editGrid(row,col,player2.getMarker());
+            editReturnValue = gameBoard.editGrid(row,col,player2.getMarker());
         }
+        if(editReturnValue != -1)
+        {
+            turn^=1;
+        }else
+        {
+            console.log("position already filled");
+        }
+    }
 
-        turn^=1;
+    function playStep_CheckWinner(row,col)
+    {
+        playStep(row,col);
+        return gameBoard.checkWinner();
     }
 
     function playStepConsole()
@@ -194,7 +192,12 @@ function Game()
         turn^=1;
     }
 
-    return {roundStart,getBoard,playConsole,playStep,getPlayerInTurn};
+    function getPlayers()
+    {
+        return {player1,player2};
+    }
+
+    return {getBoard,playStep_CheckWinner,getPlayerInTurn,getPlayers};
 }
 
 function screenController()
@@ -202,25 +205,81 @@ function screenController()
     const myGame = Game();
     const playerTurnDiv = document.querySelector("#playersTurn");
     const gameBoardDiv = document.querySelector("#gameBoard");
-
+    const board = myGame.getBoard();
     function initilizeBoard()
     {
         playerTurnDiv.textContent = "It's "+myGame.getPlayerInTurn().getName()+"'s turn";
-        const board = myGame.getBoard();
+        
         for(let i=0;i<board.length;i++)
         {
             for(let j=0;j<board[0].length;j++)
             {
                 const cellButton = document.createElement("button");
                 cellButton.classList.add("cell");
+                cellButton.dataset.position = [i,j];
                 cellButton.textContent = board[i][j];
                 gameBoardDiv.appendChild(cellButton);
             }
         }
     }
 
+    function isGameFinished(state)
+    {
+        const {player1,player2} = myGame.getPlayers();
+        let xplayer;
+        let oplayer;
+        if(player1.getMarker() == 'x' || player1.getMarker() == 'X' )
+        {
+            xplayer = player1;
+            oplayer = player2;
+        }else if(player2.getMarker() == 'x' || player2.getMarker() == 'X')
+        {
+            xplayer = player2;
+            oplayer = player1;
+        }else
+        {
+            console.error("None of the players' marker is an 'x' ");
+        }
+
+        
+        // possible values are null - x - o - tie
+        if(state == null){
+            return;
+        }
+        state = state.toLowerCase();
+        if (state == 'x' ){
+            console.log(`${xplayer.getName()} has won !!`);
+        }
+        else if (state == 'o'){
+            console.log(`${oplayer.getName()} has won !!`);
+        }
+        else if(state == 'tie'){
+            console.log(`its a tie`);
+        }
+    }
+
+    function updateCell(cell,row,col)
+    {
+        cell.textContent = board[row][col];
+        playerTurnDiv.textContent = "It's "+myGame.getPlayerInTurn().getName()+"'s turn";
+    }
+
+    function clickHandlerBoard(e){
+        const myRow = e.target.dataset.position[0];
+        const myCol = e.target.dataset.position[2];
+        // console.log(`my position is ${myRow},${myCol}`);
+        const winnerState = myGame.playStep_CheckWinner(myRow,myCol);
+        isGameFinished(winnerState);
+        updateCell(e.target,myRow,myCol);
+        
+    }
+
+    gameBoardDiv.addEventListener("click", clickHandlerBoard);
+
     return {initilizeBoard}
 }
+
+
 
 const myScreen = screenController();
 myScreen.initilizeBoard();
