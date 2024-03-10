@@ -1,25 +1,15 @@
-
-
 function Player(Name,marker)
 {
     let numOfWins = 0;
 
-
-
     function incWins()
-    {
-        numOfWins++;
-    }
+    {numOfWins++;}
 
     function getMarker()
-    {
-        return marker;
-    }
+    {return marker;}
 
     function getName()
-    {
-        return Name;
-    }
+    {return Name;}
 
     function getWins()
     {return numOfWins;}
@@ -34,6 +24,7 @@ function Game()
     const gameBoard = (function(){
         //create a 3x3 array filled with zeros
         const grid = new Array();
+        let winningCombination = null;
         for(let i=0;i<3;i++)
         {
             grid[i] = new Array("-","-","-");
@@ -51,6 +42,7 @@ function Game()
         ];
         
         function clearGrid(){
+            winningCombination = null;
             for (let i = 0; i < grid.length; i++) {
                 for (let j = 0; j < grid[0].length; j++)
                 {
@@ -59,13 +51,6 @@ function Game()
             }
         }
 
-        function displayGrid(){
-            console.log("Current Grid: ")
-            console.log(JSON.stringify(grid[0]));
-            console.log(JSON.stringify(grid[1]));
-            console.log(JSON.stringify(grid[2]));
-            // console.table(grid);
-        }
 
         function editGrid(row,col,marker){
             if(row>2 || col >2)
@@ -88,7 +73,7 @@ function Game()
                 const player = grid[ax][ay];
 
                 if (player !== '-' && player === grid[bx][by] && player === grid[cx][cy]) {
-                    // console.log(`${player} has won`);
+                    winningCombination = winningLines[i];
                     return player;
                 }
             }
@@ -97,22 +82,21 @@ function Game()
                 for(let j = 0;j<3;j++)
                 {
                     if (grid[i][j] === '-') {
-                        // console.log("Game is not over yet");
                         return null;  // Game is not over yet
                     }
                 }   
             }
             
             // If no winner and no empty cells, it's a tie
-            // console.log("Tie");
             return 'Tie';
         }
 
         function getGrid(){return grid;}
 
+        function getwinningCombination()
+        {return winningCombination;}
 
-
-        return {getGrid,checkWinner,clearGrid,editGrid};
+        return {getwinningCombination,getGrid,checkWinner,clearGrid,editGrid};
     })();
 
     const player1 = Player("Human","x");
@@ -121,24 +105,10 @@ function Game()
 
     const getBoard = gameBoard.getGrid;
 
-    function roundStart(startWith = 0)
+    function newGame(startWith = 0)
     {
         gameBoard.clearGrid();
         turn = startWith;
-    }
-
-    function playConsole()
-    {
-        roundStart();
-        
-        while(true){
-            playStepConsole();
-            if(gameBoard.checkWinner() !== null)
-            {
-                console.log("Round Has Finished!");
-                break;
-            }
-        }
     }
 
     function getPlayerInTurn()
@@ -163,7 +133,7 @@ function Game()
             turn^=1;
         }else
         {
-            console.log("position already filled");
+            ;
         }
     }
 
@@ -173,31 +143,18 @@ function Game()
         return gameBoard.checkWinner();
     }
 
-    function playStepConsole()
-    {
-        if(!turn){
-            
-            const row = prompt(`${player1.getName()} row:`);
-            const col = prompt(`${player1.getName()} col:`);
-            console.log(`${player1.getName()} played in ${row},${col}`);
-            gameBoard.editGrid(row,col,player1.getMarker());
-        }
-        else{
-            const row = prompt(`${player2.getName()} row:`);
-            const col = prompt(`${player2.getName()} col:`);
-            console.log(`${player2.getName()} played in ${row},${col}`);
-            gameBoard.editGrid(row,col,player2.getMarker());
-        }
-        gameBoard.displayGrid();
-        turn^=1;
-    }
-
     function getPlayers()
     {
         return {player1,player2};
     }
 
-    return {getBoard,playStep_CheckWinner,getPlayerInTurn,getPlayers};
+    function getwinningCombination()
+    {
+        return gameBoard.getwinningCombination();
+    }
+
+
+    return {getwinningCombination,newGame,getBoard,playStep_CheckWinner,getPlayerInTurn,getPlayers};
 }
 
 function screenController()
@@ -206,6 +163,8 @@ function screenController()
     const playerTurnDiv = document.querySelector("#playersTurn");
     const gameBoardDiv = document.querySelector("#gameBoard");
     const board = myGame.getBoard();
+    const cells = new Array();
+    
     function initilizeBoard()
     {
         playerTurnDiv.textContent = "It's "+myGame.getPlayerInTurn().getName()+"'s turn";
@@ -219,8 +178,106 @@ function screenController()
                 cellButton.dataset.position = [i,j];
                 cellButton.textContent = board[i][j];
                 gameBoardDiv.appendChild(cellButton);
+                // strikeThroughCell(cellButton,0);
+                cells.push(cellButton);
             }
         }
+    }
+
+    function findCell(row,col)
+    {
+        for(let i=0;i<cells.length;i++)
+        {
+            const myRow = cells[i].dataset.position[0];
+            const myCol = cells[i].dataset.position[2];
+            if(row == myRow && col == myCol)
+            {
+                console.log("found cell");
+                return cells[i];
+            }
+        };
+        console.error("No such cell found");
+    }
+
+    function clearBoard()
+    {
+        const cells = document.querySelectorAll(".cell");
+        cells.forEach(cell=>{
+            cell.remove();
+        });
+    }
+
+    function arraysEqual(arr1, arr2) {
+        for(let i=0;i<3;i++)
+        {
+            for(let j=0;j<2;j++)
+            {
+                if(arr1[i][j] != arr2[i][j])
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    function strikeThroughCell(cell,degree)
+    {
+        const line = document.createElement("div");
+        line.classList.add("strikeThroughElemenet");
+        line.style = `transform: rotate(${degree}deg);`;
+        cell.insertAdjacentElement('afterbegin',line);
+    }
+
+    function crossWinningCells()
+    {
+        const comb = myGame.getwinningCombination();
+        let angle = 0;
+        if(arraysEqual(comb,[[0,0], [0,1], [0,2]]) || arraysEqual(comb, [[1,0], [1,1], [1,2]]) || arraysEqual(comb, [[2,0], [2,1], [2,2]])  )
+        {
+            angle =0;
+        }else if (arraysEqual(comb, [[0,0], [1,0], [2,0]] ) || arraysEqual(comb, [[0,1], [1,1], [2,1]]) || arraysEqual(comb, [[0,2], [1,2], [2,2]]) )
+        {
+            angle =90;
+        }
+        else if(arraysEqual(comb, [[0,0], [1,1], [2,2]] ) )
+        {
+            angle =45;
+        }
+        else if(arraysEqual(comb, [[2,0], [1,1], [0,2]]) )
+        {
+            angle = -45;
+        }
+        else
+        {
+            console.error("unknown winning combination entered");
+        }
+
+        comb.forEach((coordinate)=>{
+            const cell = findCell(coordinate[0],coordinate[1]);
+            strikeThroughCell(cell,angle);
+            
+        })
+    }
+
+    function updateWinsDisplay()
+    {
+        const {player1,player2} = myGame.getPlayers();
+        const p1Div = document.querySelector("#p1Wins");
+        const p2Div = document.querySelector("#p2Wins");
+        p1Div.textContent = `${player1.getName()}(${player1.getMarker()}) wins: ${player1.getWins()}`;
+        p2Div.textContent = `${player2.getName()}(${player2.getMarker()}) wins: ${player2.getWins()}`;
+        // console.log("The winning combination is ",myGame.getwinningCombination());
+        crossWinningCells();
+        
+        
+    }
+
+    function startNewGame()
+    {
+        myGame.newGame();
+        clearBoard();
+        initilizeBoard();
     }
 
     function isGameFinished(state)
@@ -240,8 +297,7 @@ function screenController()
         {
             console.error("None of the players' marker is an 'x' ");
         }
-
-        
+     
         // possible values are null - x - o - tie
         if(state == null){
             return;
@@ -249,9 +305,13 @@ function screenController()
         state = state.toLowerCase();
         if (state == 'x' ){
             console.log(`${xplayer.getName()} has won !!`);
+            xplayer.incWins();
+            updateWinsDisplay();
         }
         else if (state == 'o'){
             console.log(`${oplayer.getName()} has won !!`);
+            oplayer.incWins();
+            updateWinsDisplay();
         }
         else if(state == 'tie'){
             console.log(`its a tie`);
@@ -260,6 +320,7 @@ function screenController()
 
     function updateCell(cell,row,col)
     {
+        // cell.style['z-index'] = -1;
         cell.textContent = board[row][col];
         playerTurnDiv.textContent = "It's "+myGame.getPlayerInTurn().getName()+"'s turn";
     }
@@ -269,8 +330,9 @@ function screenController()
         const myCol = e.target.dataset.position[2];
         // console.log(`my position is ${myRow},${myCol}`);
         const winnerState = myGame.playStep_CheckWinner(myRow,myCol);
-        isGameFinished(winnerState);
         updateCell(e.target,myRow,myCol);
+        isGameFinished(winnerState);
+        
         
     }
 
@@ -281,5 +343,7 @@ function screenController()
 
 
 
+
 const myScreen = screenController();
 myScreen.initilizeBoard();
+
