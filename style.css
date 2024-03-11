@@ -1,51 +1,66 @@
 #gameBoard {
-    width: 300px; /* Adjust width as needed */
+  width: 300px; /* Adjust width as needed */
   height: 300px; /* Adjust height as needed */
   margin: 0 auto; /* Center the board horizontally */
   border: 1px solid #ccc; /* Add a border around the board */
   display: grid;
   grid-template-columns: repeat(3, 1fr); /* Divide into 3 equal columns */
   grid-template-rows: repeat(3, 1fr); /* Divide into 3 equal rows */
-  }
+}
+
+.scoreBoard{
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.playerWins{
+  flex:0 1 auto;
   
-  .cell {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    font-size: 2rem;
-    border: 1px solid grey;
-    background: lightyellow;
-    cursor: pointer;
-    position: relative;
-    
-  }
+}
 
-  #footer{
-    display: flex;
-    justify-content: center;
-    margin: 30px 0;
-
-  }
-
-  #restartButton{
-    flex: 0 1 auto;
-    padding: 10px 15px;
-    border-radius: 20px;
-    font-size: large;
-    border: 2px solid black;
-    background-color: lightyellow;
-  }
-
-  .strikeThroughElemenet {
-    content: "";
-    position: absolute;
-    top: 50%;  
-    left: 0;
-    width: 100%;
-    height: 2px;  
-    background-color: black;  
-    z-index: 10;
-    /* transform: rotate(-45deg); */
-  } 
+#playersTurn{
+  margin: 0 auto;
+  width: fit-content;
+}
   
+.cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-size: 2rem;
+  border: 1px solid grey;
+  background: lightyellow;
+  cursor: pointer;
+  position: relative;
+  
+}
+
+#footer{
+  display: flex;
+  justify-content: center;
+  margin: 30px 0;
+
+}
+
+#restartButton{
+  flex: 0 1 auto;
+  padding: 10px 15px;
+  border-radius: 20px;
+  font-size: large;
+  border: 2px solid black;
+  background-color: lightyellow;
+  cursor: pointer;
+}
+
+.strikeThroughElemenet {
+  content: "";
+  position: absolute;
+  top: 50%;  
+  left: 0;
+  width: 100%;
+  height: 2px;  
+  background-color: black;  
+  z-index: 10;
+  /* transform: rotate(-45deg); */
+} 

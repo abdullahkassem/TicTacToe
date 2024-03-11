@@ -1,4 +1,4 @@
-function Player(Name,marker)
+function Player(Name,marker,color)
 {
     let numOfWins = 0;
 
@@ -14,7 +14,13 @@ function Player(Name,marker)
     function getWins()
     {return numOfWins;}
 
-    return {incWins,getMarker,getName,getWins};
+    function setColor(clr)
+    {color = clr;}
+
+    function getColor(clr)
+    {return color;}
+
+    return {getColor,setColor,incWins,getMarker,getName,getWins};
 }
 
 
@@ -96,11 +102,12 @@ function Game()
         function getwinningCombination()
         {return winningCombination;}
 
+
         return {getwinningCombination,getGrid,checkWinner,clearGrid,editGrid};
     })();
 
-    const player1 = Player("Human","x");
-    const player2 = Player("Human2","o");
+    const player1 = Player("Player 1","x","blue");
+    const player2 = Player("Player 2","o","red");
     let turn=0;
 
     const getBoard = gameBoard.getGrid;
@@ -163,11 +170,14 @@ function screenController()
     const playerTurnDiv = document.querySelector("#playersTurn");
     const gameBoardDiv = document.querySelector("#gameBoard");
     const board = myGame.getBoard();
-    const cells = new Array();
+    let cells = new Array();
     
     function initilizeBoard()
     {
-        playerTurnDiv.textContent = "It's "+myGame.getPlayerInTurn().getName()+"'s turn";
+        const currPlayer = myGame.getPlayerInTurn();
+        playerTurnDiv.textContent = "It's "+ currPlayer.getName()+"'s turn";
+        playerTurnDiv.style.color = currPlayer.getColor();
+        
         
         for(let i=0;i<board.length;i++)
         {
@@ -177,6 +187,7 @@ function screenController()
                 cellButton.classList.add("cell");
                 cellButton.dataset.position = [i,j];
                 cellButton.textContent = board[i][j];
+                cellButton.addEventListener("click", clickHandlerBoard);                
                 gameBoardDiv.appendChild(cellButton);
                 // strikeThroughCell(cellButton,0);
                 cells.push(cellButton);
@@ -192,7 +203,6 @@ function screenController()
             const myCol = cells[i].dataset.position[2];
             if(row == myRow && col == myCol)
             {
-                console.log("found cell");
                 return cells[i];
             }
         };
@@ -201,10 +211,11 @@ function screenController()
 
     function clearBoard()
     {
-        const cells = document.querySelectorAll(".cell");
-        cells.forEach(cell=>{
+        const myCells = document.querySelectorAll(".cell");
+        myCells.forEach(cell=>{
             cell.remove();
         });
+        cells = new Array();
     }
 
     function arraysEqual(arr1, arr2) {
@@ -221,12 +232,22 @@ function screenController()
         return true;
     }
 
+    function makeCellsUnclickable()
+    {
+        cells.forEach((cell)=>{
+            cell.style["z-index"] = -1;
+        });
+    }
+
     function strikeThroughCell(cell,degree)
     {
         const line = document.createElement("div");
         line.classList.add("strikeThroughElemenet");
         line.style = `transform: rotate(${degree}deg);`;
-        cell.insertAdjacentElement('afterbegin',line);
+        if(null == cell.insertAdjacentElement('afterbegin',line))
+        {
+            console.error("Failed to add element");
+        }
     }
 
     function crossWinningCells()
@@ -269,9 +290,12 @@ function screenController()
         p2Div.textContent = `${player2.getName()}(${player2.getMarker()}) wins: ${player2.getWins()}`;
         // console.log("The winning combination is ",myGame.getwinningCombination());
         crossWinningCells();
+        makeCellsUnclickable();
         
         
     }
+
+    document.querySelector("#restartButton").addEventListener("click",startNewGame);
 
     function startNewGame()
     {
@@ -304,12 +328,10 @@ function screenController()
         }
         state = state.toLowerCase();
         if (state == 'x' ){
-            console.log(`${xplayer.getName()} has won !!`);
             xplayer.incWins();
             updateWinsDisplay();
         }
         else if (state == 'o'){
-            console.log(`${oplayer.getName()} has won !!`);
             oplayer.incWins();
             updateWinsDisplay();
         }
@@ -322,7 +344,10 @@ function screenController()
     {
         // cell.style['z-index'] = -1;
         cell.textContent = board[row][col];
-        playerTurnDiv.textContent = "It's "+myGame.getPlayerInTurn().getName()+"'s turn";
+        const currPlayer = myGame.getPlayerInTurn();
+        playerTurnDiv.textContent = "It's "+currPlayer.getName()+"'s turn";
+        playerTurnDiv.style.color = currPlayer.getColor();
+
     }
 
     function clickHandlerBoard(e){
@@ -335,8 +360,8 @@ function screenController()
         
         
     }
-
-    gameBoardDiv.addEventListener("click", clickHandlerBoard);
+    
+    
 
     return {initilizeBoard}
 }
